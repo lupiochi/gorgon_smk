@@ -1,0 +1,9 @@
+name: reading_env
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - python=3.9
+  - cutadapt
+  - fastqc
+  - snakemake

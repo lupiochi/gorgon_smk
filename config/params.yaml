@@ -1,0 +1,30 @@
+cutadapt:
+  cores: 4
+  memory: "8G"
+  adapter1: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
+  adapter2: "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
+
+fastqc:
+  cores: 4
+  memory: "4G"
+
+mapping:
+  cores: 24
+  memory: "8G"
+  rg_tag_structure: "@RG\\tID:{sample}_{lane}\\tSM:{sample}\\PL:illumina\\PU:GALICIA"
+
+remove_duplicates:
+  cores: 8
+  memory: "8G"
+
+merge:
+  cores: 8
+  memory: "8G"
+
+compression:
+  cores: 4
+  memory: "8G"
+
+microbes:
+  top_n_microbes: 4
+  count_threshold: "8G"

@@ -1,0 +1,20 @@
+name: reporting_env
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pandas
+  - snakemake
+  - matplotlib
+  - seaborn
+  - biom-format
+  - multiqc
+  - r-base
+  - r-ggplot2
+  - bioconductor-biomformat
+  - r-vegan
+  - r-data.table
+  - r-dplyr
+  - bioconductor-phyloseq

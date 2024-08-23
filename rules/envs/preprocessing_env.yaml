@@ -1,0 +1,11 @@
+name: preprocessing_env
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - python=3.9
+  - bwa                    
+  - samtools                
+  - kraken2                 
+  - pigz                    
+  - snakemake               

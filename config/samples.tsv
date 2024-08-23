@@ -1,0 +1,4 @@
+sample_id	lane	forward_filename	reverse_filename
+ERR1700768	lane1	ERR1700768_lane1_1.fastq.gz	ERR1700768_lane1_2.fastq.gz
+ERR1700769	lane1	ERR1700769_lane1_1.fastq.gz	ERR1700769_lane1_2.fastq.gz
+ERR1700783	lane1	ERR1700783_lane1_1.fastq.gz	ERR1700783_lane1_2.fastq.gz
