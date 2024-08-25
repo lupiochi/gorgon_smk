@@ -5,11 +5,10 @@ from pathlib import Path
 # Load configurations
 config_path = Path("config")
 params = yaml.safe_load(open(config_path / "params.yaml"))
-config = yaml.safe_load(open(config_path / "config.yaml"))
 samples = pd.read_table(config_path / "samples.tsv", comment="#", dtype="str")
 
 # Define the SAMPLES variable from the samples DataFrame
-SAMPLES = samples["sample_id"].unique().tolist()
+SAMPLES = samples.groupby("sample_id")["lane"].apply(list).to_dict()
 
 # Sanity check for samples file
 assert "sample_id" in samples.columns, "Missing 'sample_id' column in samples.tsv"
@@ -27,11 +26,5 @@ rule all:
         expand(OUTPUT_DIR / "{sample}/figures/{sample}_host_microbe_ratio_pie_chart.png", sample=samples["sample_id"]),
         expand(OUTPUT_DIR / "{sample}/figures/{sample}_top_microbes_bar_chart.png", sample=samples["sample_id"]),
         expand(OUTPUT_DIR / "{sample}/figures/{sample}_richness_plot.png", sample=samples["sample_id"]),
-        expand(str(OUTPUT_DIR / "{sample}" / "multiqc_report.html"), sample=samples["sample_id"].tolist()),
-        
-        # Add the aggregated ordination plot that will be generated after all samples are processed
-        str(OUTPUT_DIR / "combined_ordination_plot.png"),
-        
-        # Add outputs from the comparison analysis
-        str(OUTPUT_DIR / "comparison_statistics.txt"),
-        directory(OUTPUT_DIR / "comparison_figures")
+        expand(OUTPUT_DIR / "{sample}" / "multiqc_report_{lane}.html", sample=samples["sample_id"], lane=samples["lane"]), 
+        str(OUTPUT_DIR / "combined_ordination_plot.png")

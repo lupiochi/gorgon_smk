@@ -13,6 +13,7 @@ mapping:
   memory: "8G"
   rg_tag_structure: "@RG\\tID:{sample}_{lane}\\tSM:{sample}\\PL:illumina\\PU:GALICIA"
 
+
 remove_duplicates:
   cores: 8
   memory: "8G"

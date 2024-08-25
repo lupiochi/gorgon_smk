@@ -16,8 +16,8 @@ rule index_reference_genome:
 
 rule cutadapt:
     input:
-        R1=str(INPUT_DIR / "{sample}_{lane}_1.fastq.gz"),
-        R2=str(INPUT_DIR / "{sample}_{lane}_2.fastq.gz")
+        R1=str(INPUT_DIR / "{sample}_{lane}_R1_001.fastq.gz"),
+        R2=str(INPUT_DIR / "{sample}_{lane}_R2_001.fastq.gz")
     output:
         trimmed_R1=str(OUTPUT_DIR / "{sample}" / "{sample}_{lane}_R1_trim.fastq.gz"),
         trimmed_R2=str(OUTPUT_DIR / "{sample}" / "{sample}_{lane}_R2_trim.fastq.gz"),
@@ -52,3 +52,16 @@ rule fastqc:
         fastqc --threads {params.cores} -o {OUTPUT_DIR}/{wildcards.sample}/fastQC {input.trimmed_R1} {input.trimmed_R2}
         """
 
+rule multiqc:
+    input:
+        html_R1=str(OUTPUT_DIR / "{sample}/fastQC/{sample}_{lane}_R1_trim_fastqc.html"),
+        html_R2=str(OUTPUT_DIR / "{sample}/fastQC/{sample}_{lane}_R2_trim_fastqc.html"),
+        cutadapt_logs=str(OUTPUT_DIR / "{sample}/{sample}_{lane}_Cutadapt.log")
+    output:
+        multiqc_report=str(OUTPUT_DIR / "{sample}/multiqc_report_{lane}.html")
+    conda:
+        "envs/reading_env.yaml"
+    shell:
+        """
+        multiqc --force {OUTPUT_DIR}/{wildcards.sample} -o {output.multiqc_report}
+        """

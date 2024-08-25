@@ -1,8 +1,8 @@
 rule identify_top_microbes:
     input:
-        kraken2_report=str(OUTPUT_DIR / "{sample}" / "{sample}_{lane}_kraken2_report.txt")
+        kraken2_report=str(OUTPUT_DIR / "{sample}" / "{sample}_kraken2_report.txt")
     output:
-        top_nonhost=str(OUTPUT_DIR / "{sample}" / "{sample}_{lane}_top_nonhost.csv")
+        top_nonhost=str(OUTPUT_DIR / "{sample}" / "{sample}_top_nonhost.csv")
     params:
         top_n=params["microbes"]["top_n_microbes"],
         count_threshold=params["microbes"]["count_threshold"]
@@ -32,10 +32,10 @@ rule identify_top_microbes:
 
 rule process_sample:
     input:
-        csv_file=str(OUTPUT_DIR / "{sample}" / "{sample}_{lane}_top_nonhost.csv")
+        csv_file=str(OUTPUT_DIR / "{sample}" / "{sample}_top_nonhost.csv")
     output:
-        richness_plot=str(OUTPUT_DIR / "{sample}/figures/{sample}_{lane}_richness_plot.png"),
-        species_count_file=str(OUTPUT_DIR / "{sample}" / "{sample}_{lane}_species_count.csv")
+        richness_plot=str(OUTPUT_DIR / "{sample}/figures/{sample}_richness_plot.png"),
+        species_count_file=str(OUTPUT_DIR / "{sample}" / "{sample}_species_count.csv")
     params:
         script=str(SCRIPTS_DIR / "phyloseq_analysis.r")
     conda:
@@ -47,25 +47,32 @@ rule process_sample:
 
 rule aggregate_samples:
     input:
-        expand(str(OUTPUT_DIR / "{sample}" / "{sample}_{lane}_species_count.csv"), sample=samples["sample_id"], lane=samples["lane"])
+        expand(str(OUTPUT_DIR / "{sample}" / "{sample}_species_count.csv"), sample=samples["sample_id"])
     output:
         merged_file=str(OUTPUT_DIR / "merged_species_counts.csv")
     run:
         import pandas as pd
+        import os
         
-        # Read and merge all species count files
-        dfs = []
+        # Read and normalize species counts
+        dfs = {}
         for csv_file in input:
-            df = pd.read_csv(csv_file, index_col=0)
-            dfs.append(df)
+            # Extract sample name from the file path (e.g., '42-i31_S23')
+            sample_name = os.path.basename(csv_file).split('_species_count.csv')[0]
+
+            # Check if sample already processed to avoid lane-specific duplicates
+            if sample_name not in dfs:
+                # Read each species count file
+                df = pd.read_csv(csv_file, index_col=0)
+                # Normalize by total counts within the sample (relative abundance)
+                df = df / df.sum()
+                df.columns = [sample_name]  # Rename column to sample name
+                dfs[sample_name] = df  # Add dataframe to dictionary
+
+        # Concatenate the normalized dataframes, aligning species by row index (species name)
+        merged_df = pd.concat(dfs.values(), axis=1, join="outer").fillna(0)
         
-        # Concatenate all dataframes
-        merged_df = pd.concat(dfs)
-
-        # Drop any duplicate rows
-        merged_df = merged_df.drop_duplicates()
-
-        # Save the merged dataframe
+        # Save the merged dataframe with each sample as a separate column
         merged_df.to_csv(output.merged_file)
 
 
@@ -73,6 +80,7 @@ rule combined_analysis:
     input:
         merged_file=str(OUTPUT_DIR / "merged_species_counts.csv")
     output:
+        comparison_statistics=str(OUTPUT_DIR / "comparison_statistics_combined_analysis.txt"),
         ordination_plot=str(OUTPUT_DIR / "combined_ordination_plot.png")
     params:
         script=str(SCRIPTS_DIR / "phyloseq_analysis.r")
@@ -80,29 +88,15 @@ rule combined_analysis:
         "envs/reporting_env.yaml"
     shell:
         """
-        Rscript {params.script} {input.merged_file} "NULL" {output.ordination_plot} "NULL"
-        """
-
-rule multiqc:
-    input:
-        html_R1=expand(OUTPUT_DIR / "{sample}/fastQC/{sample}_{lane}_R1_trim_fastqc.html", sample=samples["sample_id"], lane=samples["lane"]),
-        html_R2=expand(OUTPUT_DIR / "{sample}/fastQC/{sample}_{lane}_R2_trim_fastqc.html", sample=samples["sample_id"], lane=samples["lane"]),
-        cutadapt_logs=expand(OUTPUT_DIR / "{sample}/{sample}_{lane}_Cutadapt.log", sample=samples["sample_id"], lane=samples["lane"])
-    output:
-        multiqc_report=str(OUTPUT_DIR / "{sample}/multiqc_report.html")
-    conda:
-        "envs/reporting_env.yaml"
-    shell:
-        """
-        multiqc --force {OUTPUT_DIR}/{wildcards.sample} -o {OUTPUT_DIR}/{wildcards.sample}
+        Rscript {params.script} {input.merged_file} "NULL" {output.ordination_plot} {output.comparison_statistics}
         """
 
 rule calculate_host_microbe_ratio:
     input:
-        cram_file=str(OUTPUT_DIR / "{sample}" / "{sample}_{lane}.cram"),
-        kraken2_report=str(OUTPUT_DIR / "{sample}" / "{sample}_{lane}_kraken2_report.txt")
+        cram_file=str(OUTPUT_DIR / "{sample}" / "{sample}_merged.cram"),
+        kraken2_report=str(OUTPUT_DIR / "{sample}" / "{sample}_kraken2_report.txt")
     output:
-        ratio_txt=str(OUTPUT_DIR / "{sample}" / "{sample}_{lane}_host_microbe_ratio.txt")
+        ratio_txt=str(OUTPUT_DIR / "{sample}" / "{sample}_host_microbe_ratio.txt")
     conda:
         "envs/reporting_env.yaml"
     shell:
@@ -119,15 +113,13 @@ rule calculate_host_microbe_ratio:
         echo -e "Host reads: $host_reads\nMicrobial reads: $microbial_reads\nHost/Microbe Ratio: $ratio" > {output.ratio_txt}
         """
 
-
-
 rule generate_visualizations:
     input:
-        top_nonhost=str(OUTPUT_DIR / "{sample}" / "{sample}_{lane}_top_nonhost.csv"),
-        ratio_file=str(OUTPUT_DIR / "{sample}" / "{sample}_{lane}_host_microbe_ratio.txt")
+        top_nonhost=str(OUTPUT_DIR / "{sample}" / "{sample}_top_nonhost.csv"),
+        ratio_file=str(OUTPUT_DIR / "{sample}" / "{sample}_host_microbe_ratio.txt")
     output:
-        pie_chart=str(OUTPUT_DIR / "{sample}/figures/{sample}_{lane}_host_microbe_ratio_pie_chart.png"),
-        bar_chart=str(OUTPUT_DIR / "{sample}/figures/{sample}_{lane}_top_microbes_bar_chart.png")
+        pie_chart=str(OUTPUT_DIR / "{sample}/figures/{sample}_host_microbe_ratio_pie_chart.png"),
+        bar_chart=str(OUTPUT_DIR / "{sample}/figures/{sample}_top_microbes_bar_chart.png")
     params:
         script=str(SCRIPTS_DIR / "visualization.py")
     conda:
@@ -137,23 +129,3 @@ rule generate_visualizations:
         mkdir -p $(dirname {output.pie_chart})
         python {params.script} {input.top_nonhost} {input.ratio_file} {output.pie_chart} {output.bar_chart}
         """
-
-
-rule compare_samples:
-    input:
-        species_count_files=expand(OUTPUT_DIR / "{sample}" / "{sample}_{lane}_species_count.csv", sample=samples["sample_id"], lane=samples["lane"]),
-        ratio_files=expand(OUTPUT_DIR / "{sample}" / "{sample}_{lane}_host_microbe_ratio.txt", sample=samples["sample_id"], lane=samples["lane"])
-    output:
-        comparison_statistics=str(OUTPUT_DIR / "comparison_statistics.txt"),
-        comparison_figures=directory(OUTPUT_DIR / "comparison_figures")
-    params:
-        output_dir=str(OUTPUT_DIR),
-        species_count_files=lambda wildcards, input: ",".join(input.species_count_files),  # Join the input list as a comma-separated string
-        ratio_files=lambda wildcards, input: ",".join(input.ratio_files)  # Join the input list as a comma-separated string
-    conda:
-        "envs/reporting_env.yaml"
-    shell:
-        """
-        Rscript {SCRIPTS_DIR}/compare_samples.r {params.species_count_files} {params.ratio_files} {params.output_dir}
-        """
-

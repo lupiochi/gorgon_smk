@@ -1,13 +1,12 @@
 from pathlib import Path
 
 # Define base directories
-BASE_DIR = Path("/home/gorgon/modular/")
-INPUT_DIR = BASE_DIR.joinpath("data/")
-OUTPUT_DIR = BASE_DIR.joinpath("output/")
+BASE_DIR = Path("/home/lpiochi/")
+INPUT_DIR = Path("/mnt/raw/amel_ecoapi")
+OUTPUT_DIR = Path("/mnt/share/bees/ecoapi/results_piochi_smk")
 SCRIPTS_DIR = BASE_DIR.joinpath("snake_v4/scripts/")
 KRAKEN_DB = BASE_DIR.joinpath("minikraken2_db/minikraken2_v2_8GB_201904_UPDATE")
-REF_GENOME_DIR = BASE_DIR.joinpath("Amel3.1/")
-METADATA_FILE = BASE_DIR.joinpath("config/metadata.tsv")
+REF_GENOME_DIR = Path("/mnt/share/bees/RefGenomes/Amel3.1/")
 
 # Define reference genome and its indexed files
 REF_GENOME = REF_GENOME_DIR.joinpath("Amel3.1.fna")
