@@ -4,7 +4,7 @@ from pathlib import Path
 BASE_DIR = Path("/home/lpiochi/")
 INPUT_DIR = Path("/mnt/raw/amel_ecoapi")
 OUTPUT_DIR = Path("/mnt/share/bees/ecoapi/results_piochi_smk")
-SCRIPTS_DIR = BASE_DIR.joinpath("snake_v4/scripts/")
+SCRIPTS_DIR = BASE_DIR.joinpath("snake_v3/scripts/")
 KRAKEN_DB = BASE_DIR.joinpath("minikraken2_db/minikraken2_v2_8GB_201904_UPDATE")
 REF_GENOME_DIR = Path("/mnt/share/bees/RefGenomes/Amel3.1/")
 

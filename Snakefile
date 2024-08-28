@@ -13,11 +13,11 @@ SAMPLES = samples.groupby("sample_id")["lane"].apply(list).to_dict()
 # Sanity check for samples file
 assert "sample_id" in samples.columns, "Missing 'sample_id' column in samples.tsv"
 
-# Include paths and rule files
+# Include paths and modular rule files
 include: "paths.smk"
-include: "rules/reading.smk"
-include: "rules/preprocessing.smk"
-include: "rules/reporting.smk"
+include: "rules/reading/__main__.smk"
+include: "rules/preprocessing/__main__.smk"
+include: "rules/reporting/__main__.smk"
 
 # Final 'all' rule to indicate what needs to be completed
 rule all:

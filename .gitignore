@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+
+.snakemake/
+
+*.tmp
+*.swp
+*.DS_Store
+
+.vscode/

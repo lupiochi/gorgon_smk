@@ -4,7 +4,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.9
-  - cutadapt
-  - fastqc
+  - cutadapt=4.9
+  - fastqc=0.12.1
   - snakemake
-  - multiqc
+  - multiqc=1.24.1
