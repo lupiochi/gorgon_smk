@@ -1,15 +1,15 @@
 from pathlib import Path
 
 # Define base directories
-BASE_DIR = Path("/home/lpiochi/")
-INPUT_DIR = Path("/mnt/raw/amel_ecoapi")
-OUTPUT_DIR = Path("/mnt/share/bees/ecoapi/results_piochi_smk")
-SCRIPTS_DIR = BASE_DIR.joinpath("snake_v3/scripts/")
-KRAKEN_DB = BASE_DIR.joinpath("minikraken2_db/minikraken2_v2_8GB_201904_UPDATE")
-REF_GENOME_DIR = Path("/mnt/share/bees/RefGenomes/Amel3.1/")
+BASE_DIR = Path("/path/to/your/project")
+INPUT_DIR = Path("/path/to/your/data")
+OUTPUT_DIR = BASE_DIR.joinpath("results/")  # Generic output directory for results
+SCRIPTS_DIR = BASE_DIR.joinpath("scripts")  # Directory for custom scripts
+KRAKEN_DB = BASE_DIR.joinpath("kraken_db/database_of_choice")  # Path to Kraken2 database
+REF_GENOME_DIR = BASE_DIR.joinpath("reference_genomes")  # Directory for reference genomes
 
 # Define reference genome and its indexed files
-REF_GENOME = REF_GENOME_DIR.joinpath("Amel3.1.fna")
+REF_GENOME = REF_GENOME_DIR.joinpath("reference_genome.fna")
 REF_INDEXED_FILES = [
     str(REF_GENOME) + ".amb",
     str(REF_GENOME) + ".ann",

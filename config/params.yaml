@@ -11,7 +11,7 @@ fastqc:
 mapping:
   cores: 24
   memory: "8G"
-  rg_tag_structure: "@RG\\tID:{sample}_{lane}\\tSM:{sample}\\PL:illumina\\PU:GALICIA"
+  rg_tag_structure: "@RG\\tID:{sample}_{lane}\\tSM:{sample}\\PL:illumina\\PU:GENERIC"
 
 
 remove_duplicates:

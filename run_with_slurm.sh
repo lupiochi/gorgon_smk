@@ -7,7 +7,7 @@
 #SBATCH --time=96:00:00 
 
 # Add Miniconda to PATH
-export PATH=/home/lpiochi/miniconda3/bin:$PATH
+export PATH=/home/usr/miniconda3/bin:$PATH
 
 # Initialize Conda (this makes sure Conda is available in the job)
 eval "$(conda shell.bash hook)"
