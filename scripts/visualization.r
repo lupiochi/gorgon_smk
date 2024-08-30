@@ -2,6 +2,18 @@ library(ggplot2)
 library(dplyr)
 library(readr)
 
+"""
+This script generates visualizations, including:
+1. A pie chart showing the ratio of host to microbe reads.
+2. A bar chart displaying the top 10 non-host microbe species.
+
+The script expects four command-line arguments:
+    1. top_nonhost_file: Path to a CSV file containing the counts of non-host species.
+    2. ratio_file: Path to a text file containing the ratio of host to microbe reads.
+    3. pie_chart_output: Path to save the generated pie chart.
+    4. bar_chart_output: Path to save the generated bar chart.
+"""
+
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) != 4) {

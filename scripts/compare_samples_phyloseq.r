@@ -1,7 +1,23 @@
 library(phyloseq)
 library(ggplot2)
 library(reshape2)
-library(ggrepel)  # To handle sample label overlap
+library(ggrepel)
+
+"""
+This script performs ordination analysis and statistical comparison on microbial community data.
+
+The script takes the following command-line arguments:
+1. data_file: Path to the OTU (Operational Taxonomic Unit) table in CSV format.
+2. ordination_plot: Path to save the PCA ordination plot.
+3. comparison_statistics_file: Path to save the comparison statistics between samples.
+
+The script performs the following steps:
+1. Loads the OTU table and checks if it contains at least two samples for comparison.
+2. Computes pairwise Pearson and Spearman correlation coefficients and R² values between all sample pairs.
+3. Saves the comparison statistics to a specified file.
+4. Performs PCA (Principal Component Analysis) for ordination analysis.
+5. Generates a PCA ordination plot, labeling the samples if their number is below a specified threshold.
+"""
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) < 3) {
