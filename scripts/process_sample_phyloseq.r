@@ -1,4 +1,7 @@
 library(phyloseq)
+library(vegan)
+library(ggplot2)
+library(reshape2)
 
 """
 This script processes a single sample within a phyloseq analysis workflow. 
@@ -16,33 +19,45 @@ The script takes three command-line arguments:
 """
 
 args <- commandArgs(trailingOnly=TRUE)
-if (length(args) < 3) {
-    stop("Insufficient arguments provided. Usage: Rscript process_sample_phyloseq.r <data_file> <richness_plot> <species_count_file>")
-}
 data_file <- args[1]
-richness_plot <- args[2]
+diversity_plot <- args[2]
 species_count_file <- args[3]
 
-# Load the single sample data
 otu_data <- read.csv(data_file, row.names = 1)
 
-# Ensure the data has at least one row (species)
 if (nrow(otu_data) == 0) {
-    cat("No species data found in the OTU table. Skipping analysis.\n")
-    quit(status = 0)  # Exit gracefully if no data
+    quit(status = 0)
 }
 
-# Normalize the data to relative abundance
-otu_data_normalized <- otu_data / sum(otu_data)
-
-# Write species count table
+otu_data_normalized <- otu_data / rowSums(otu_data)
 write.csv(otu_data_normalized, file = species_count_file)
 
-# Create a richness plot (example plot; you can adjust based on your needs)
-richness <- rowSums(otu_data > 0)
-richness_plot_data <- data.frame(Species=names(richness), Richness=richness)
-png(richness_plot)
-barplot(richness_plot_data$Richness, names.arg=richness_plot_data$Species, main="Richness Plot", ylab="Richness")
-dev.off()
+# Calculate diversity metrics
+observed_species <- sum(rowSums(otu_data) > 0)  # OTUs count
+chao1_index <- estimateR(otu_data)["S.chao1", 1]  # Chao1 index
+fisher_alpha <- fisher.alpha(rowSums(otu_data))  # Fisher-Alpha
+shannon_index <- diversity(otu_data, index = "shannon")  # Shannon diversity
+simpson_index <- 1 - diversity(otu_data, index = "simpson")  # Simpson diversity, converted to 1 - Simpson
 
-cat("Species count and richness plot generated for sample.\n")
+# Combine metrics into a data frame
+diversity_metrics <- data.frame(
+    Metric = c("OTUs", "Chao1 Index", "Fisher-Alpha", "Shannon Index", "Simpson Index"),
+    Value = c(observed_species, chao1_index, fisher_alpha, shannon_index, simpson_index)
+)
+
+# Melt the data for ggplot2
+diversity_metrics_melt <- melt(diversity_metrics, id.vars = "Metric")
+
+# Plot using ggplot2
+png(diversity_plot, width = 1200, height = 400)  # Adjust size to accommodate horizontal layout
+ggplot(diversity_metrics_melt, aes(x = Metric, y = value, fill = Metric)) +
+    geom_bar(stat = "identity", color = "black") +
+    geom_text(aes(label = sprintf("%.2f", value)), vjust = -0.5, size = 3) +
+    scale_fill_brewer(palette = "Set1") +
+    theme_minimal() +
+    ylab("Index Value") +
+    ggtitle("Diversity Indices") +
+    facet_wrap(. ~ Metric, scales = "free_y", nrow = 1) +  # Arrange all plots in a single row
+    theme(axis.text.x = element_blank(),  # Remove x-axis text
+          axis.ticks.x = element_blank())  # Remove x-axis ticks
+dev.off()
