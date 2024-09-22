@@ -1,20 +1,19 @@
-library(phyloseq)
 library(vegan)
 library(ggplot2)
-library(reshape2)
 
 """
-This script processes a single sample within a phyloseq analysis workflow. 
+This script processes a single sample within a diversity analysis workflow. 
 It performs the following tasks:
 
 1. Loads species data from a provided CSV file.
 2. Normalizes the species data to relative abundances.
 3. Generates a CSV file with the normalized species counts.
-4. Creates and saves a richness plot, which visualizes the number of species (richness) in the sample.
+4. Calculates diversity indices (Shannon and Simpson).
+5. Creates and saves a diversity plot, which visualizes the Shannon and Simpson indices.
 
 The script takes three command-line arguments:
     1. data_file: The path to the input CSV file containing species data.
-    2. richness_plot: The path where the richness plot will be saved.
+    2. diversity_plot: The path where the diversity plot will be saved.
     3. species_count_file: The path where the normalized species count file will be saved.
 """
 
@@ -23,41 +22,51 @@ data_file <- args[1]
 diversity_plot <- args[2]
 species_count_file <- args[3]
 
+# Read and process data
 otu_data <- read.csv(data_file, row.names = 1)
 
+# Check if the data is empty and exit if so
 if (nrow(otu_data) == 0) {
     quit(status = 0)
 }
 
+# Normalize the data
 otu_data_normalized <- otu_data / rowSums(otu_data)
 write.csv(otu_data_normalized, file = species_count_file)
 
 # Calculate diversity metrics
-observed_species <- sum(rowSums(otu_data) > 0)  # OTUs count
-chao1_index <- estimateR(otu_data)["S.chao1", 1]  # Chao1 index
-fisher_alpha <- fisher.alpha(rowSums(otu_data))  # Fisher-Alpha
-shannon_index <- diversity(otu_data, index = "shannon")  # Shannon diversity
-simpson_index <- 1 - diversity(otu_data, index = "simpson")  # Simpson diversity, converted to 1 - Simpson
+shannon <- mean(diversity(otu_data, index = "shannon"))
+simpson <- mean(1 - diversity(otu_data, index = "simpson"))
 
-# Combine metrics into a data frame
-diversity_metrics <- data.frame(
-    Metric = c("OTUs", "Chao1 Index", "Fisher-Alpha", "Shannon Index", "Simpson Index"),
-    Value = c(observed_species, chao1_index, fisher_alpha, shannon_index, simpson_index)
+# Create data frame for plotting
+plot_data <- data.frame(
+  Metric = c("Shannon", "Simpson"),
+  Value = c(shannon, simpson)
 )
 
-# Melt the data for ggplot2
-diversity_metrics_melt <- melt(diversity_metrics, id.vars = "Metric")
+# Create the plot
+p <- ggplot(plot_data, aes(x = Metric, y = Value, fill = Metric)) +
+  geom_bar(stat = "identity", width = 0.6) +
+  geom_text(aes(label = sprintf("%.3f", Value)), vjust = -0.5, size = 5) +
+  scale_fill_manual(values = c("Shannon" = "#ff7f0e", "Simpson" = "#2ca02c")) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 12, face = "bold"),
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 12),
+    legend.position = "none",
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.background = element_rect(fill = "white", color = NA),
+    panel.grid.major.x = element_blank()
+  ) +
+  labs(title = "Diversity Indices",
+       x = NULL,
+       y = "Index Value") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1)), limits = c(0, 1))
 
-# Plot using ggplot2
-png(diversity_plot, width = 1200, height = 400)  # Adjust size to accommodate horizontal layout
-ggplot(diversity_metrics_melt, aes(x = Metric, y = value, fill = Metric)) +
-    geom_bar(stat = "identity", color = "black") +
-    geom_text(aes(label = sprintf("%.2f", value)), vjust = -0.5, size = 3) +
-    scale_fill_brewer(palette = "Set1") +
-    theme_minimal() +
-    ylab("Index Value") +
-    ggtitle("Diversity Indices") +
-    facet_wrap(. ~ Metric, scales = "free_y", nrow = 1) +  # Arrange all plots in a single row
-    theme(axis.text.x = element_blank(),  # Remove x-axis text
-          axis.ticks.x = element_blank())  # Remove x-axis ticks
-dev.off()
+# Save the plot
+ggsave(diversity_plot, plot = p, width = 6, height = 5, dpi = 300, bg = "white")
+
+# Print the values
+print(plot_data)

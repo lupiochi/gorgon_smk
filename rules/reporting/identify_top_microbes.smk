@@ -8,7 +8,6 @@ rule identify_top_microbes:
     output:
         top_nonhost=str(OUTPUT_DIR / "{sample}" / "{sample}_top_nonhost.csv")
     params:
-        top_n=params["microbes"]["top_n_microbes"],
         count_threshold=params["microbes"]["count_threshold"]
     shell:
         """
@@ -16,7 +15,6 @@ rule identify_top_microbes:
         | sed 's/.*|s__//' \
         | awk -F ',' 'NF==2 && $1 != "Homo sapiens" && $2 >= {params.count_threshold} {{print $1 "," $2}}' \
         | sort -t ',' -k2 -nr \
-        | head -n {params.top_n} \
         > {output.top_nonhost}_without_header.csv
 
         if [ -s {output.top_nonhost}_without_header.csv ]; then
